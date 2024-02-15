@@ -1,6 +1,9 @@
 import { Chart } from "chart.js";
 import { retrieveCPULoadData } from "../Services/app.service";
 
+let newAverageOverTime: number[] = [];
+let cpuLoadAverageChart: any;
+
 const generateTimeIntervals = () => {
   const intervals = [];
   const secondsInMinute = 60;
@@ -50,7 +53,7 @@ type alertSetter = (alertStatus: boolean) => void;
 const handleCPULoadChart = async (
   newAverageOverTime: number[],
   cpuLoadAverageChart: any,
-  createNewChart: any
+  createNewChart: (newChart: any) => void
 ) => {
   if (newAverageOverTime.length > 60) {
     newAverageOverTime.shift();
@@ -58,14 +61,15 @@ const handleCPULoadChart = async (
   const options = {
     scales: {
       y: {
-        beginAtZero: true, // Axe Y commence à zéro
+        beginAtZero: true,
       },
     },
   };
   const cpuLoadChartCanvas: any = document.getElementById("myChart");
-  const cpuLoadChartContext = cpuLoadChartCanvas.getContext("2d");
+  const cpuLoadChartContext =
+    cpuLoadChartCanvas && cpuLoadChartCanvas.getContext("2d");
 
-  if (newAverageOverTime.length > 1) {
+  if (cpuLoadAverageChart) {
     cpuLoadAverageChart.data.datasets[0].data = newAverageOverTime;
     cpuLoadAverageChart.update();
   } else {
@@ -94,9 +98,6 @@ const handleCPULoadChart = async (
   }
 };
 
-let newAverageOverTime: number[] = [];
-let cpuLoadAverageChart: any;
-
 const createNewChart = (newChart: any) => {
   cpuLoadAverageChart = newChart;
 };
@@ -105,7 +106,7 @@ const fetchCPULoadData = async (
   setIsHighCpuAlert: alertSetter,
   setIsRecoveryAlert: alertSetter,
   setAverageLoad: (cpuData: { cpusLength: number; loadAverage: number }) => void
-) => {
+): Promise<void> => {
   try {
     const response: any = await retrieveCPULoadData();
     newAverageOverTime.push(response.data.loadAverage);
