@@ -4,7 +4,7 @@ import { retrieveCPULoadData } from "../Services/app.service";
 let newAverageOverTime: number[] = [];
 let cpuLoadAverageChart: any;
 
-const generateTimeIntervals = () => {
+const generateTimeIntervals = (): string[] => {
   const intervals = [];
   const secondsInMinute = 60;
   const intervalInSeconds = 10;
@@ -35,13 +35,13 @@ const handleCPULevelAlert = (
     let checkHighCpuRange = newAverageOverTime.slice(-12);
 
     const isHighCPU = checkHighCpuRange.filter((e) => e < 0.45).length === 0;
-
     const hasCPURecovered =
       checkHighCpuRange.filter((e) => e >= 0.45).length === 0;
+
     if (isHighCPU) {
       setIsHighCpuAlert(true);
       setIsRecoveryAlert(false);
-    } else if (hasCPURecovered && isHighCPU) {
+    } else if (hasCPURecovered) {
       setIsRecoveryAlert(true);
       setIsHighCpuAlert(false);
     }
@@ -108,9 +108,10 @@ const fetchCPULoadData = async (
   setAverageLoad: (cpuData: { cpusLength: number; loadAverage: number }) => void
 ): Promise<void> => {
   try {
-    const response: any = await retrieveCPULoadData();
-    newAverageOverTime.push(response.data.loadAverage);
-    setAverageLoad(response.data);
+    const response = await retrieveCPULoadData();
+    newAverageOverTime.push(response?.data.loadAverage);
+
+    setAverageLoad(response?.data);
     handleCPULevelAlert(
       setIsHighCpuAlert,
       setIsRecoveryAlert,
@@ -122,4 +123,9 @@ const fetchCPULoadData = async (
   }
 };
 
-export { handleCPULoadChart, handleCPULevelAlert, fetchCPULoadData };
+export {
+  handleCPULoadChart,
+  handleCPULevelAlert,
+  fetchCPULoadData,
+  generateTimeIntervals,
+};

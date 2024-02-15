@@ -1,4 +1,9 @@
-import { handleCPULoadChart } from "./app.utils";
+import {
+  fetchCPULoadData,
+  generateTimeIntervals,
+  handleCPULevelAlert,
+  handleCPULoadChart,
+} from "./app.utils";
 jest.mock("chart.js", () => ({
   Chart: jest.fn(),
 }));
@@ -65,5 +70,105 @@ describe("testing handleCPULoadChart function", () => {
     expect(cpuLoadAverageChart.data.datasets[0].data).toHaveLength(60);
   });
 });
+jest.mock("../services/app.service.ts", () => ({
+  retrieveCPULoadData: () =>
+    Promise.resolve({
+      data: { cpusLength: 4, loadAverage: 0.75 },
+    }),
+}));
 
-describe("testing createNewChart function", () => {});
+describe("testing fetchCPULoadData function", () => {
+  test("it should retrieve CPU load data and fall functions to compute it", async () => {
+    const setIsHighCpuAlert = jest.fn();
+    const setIsRecoveryAlert = jest.fn();
+    const setAverageLoad = jest.fn();
+    const newAverageOverTime: number[] = [];
+
+    await fetchCPULoadData(
+      setIsHighCpuAlert,
+      setIsRecoveryAlert,
+      setAverageLoad
+    );
+
+    expect(setAverageLoad).toHaveBeenCalledWith({
+      cpusLength: 4,
+      loadAverage: 0.75,
+    });
+  });
+});
+
+describe("testing generateTimeIntervals function", () => {
+  test("generates array of time intervals with correct format", () => {
+    const intervals: string[] = generateTimeIntervals();
+
+    const totalMinutes = 10;
+    const intervalInSeconds = 10;
+    const expectedTotalIntervals = (totalMinutes * 60) / intervalInSeconds;
+
+    expect(intervals).toHaveLength(expectedTotalIntervals);
+
+    intervals.forEach((interval) => {
+      expect(interval).toMatch(/^\d{2}:\d{2}$/);
+    });
+  });
+});
+
+describe("testing handleCPULevelAlert function", () => {
+  test("it should do nothing before 2 minutes", () => {
+    const setIsHighCpuAlert = jest.fn();
+    const setIsRecoveryAlert = jest.fn();
+    const newAverageOverTime = [2.43, 3.12, 5.45, 6.0, 3.32];
+    handleCPULevelAlert(
+      setIsHighCpuAlert,
+      setIsRecoveryAlert,
+      newAverageOverTime
+    );
+    expect(setIsHighCpuAlert).not.toHaveBeenCalled();
+    expect(setIsRecoveryAlert).not.toHaveBeenCalled();
+  });
+  test("it should set an high CPU alert when CPU average is above threshold for 2 minutes", () => {
+    const setIsHighCpuAlert = jest.fn();
+    const setIsRecoveryAlert = jest.fn();
+    const newAverageOverTime = [
+      2.43, 3.12, 5.45, 6.0, 3.32, 2.43, 3.12, 5.45, 6.0, 3.32, 2.43, 3.12,
+      5.45, 6.0, 3.32,
+    ];
+    handleCPULevelAlert(
+      setIsHighCpuAlert,
+      setIsRecoveryAlert,
+      newAverageOverTime
+    );
+    expect(setIsHighCpuAlert).toHaveBeenCalledWith(true);
+    expect(setIsRecoveryAlert).toHaveBeenCalledWith(false);
+  });
+  test("it should not set any alert if CPU average is normal", () => {
+    const setIsHighCpuAlert = jest.fn();
+    const setIsRecoveryAlert = jest.fn();
+    const newAverageOverTime = [
+      0.32, 0.21, 0.4, 0.56, 0.32, 0.21, 0.4, 0.56, 0.32, 0.21, 0.4, 0.56, 0.32,
+      0.21, 0.4, 0.56,
+    ];
+    handleCPULevelAlert(
+      setIsHighCpuAlert,
+      setIsRecoveryAlert,
+      newAverageOverTime
+    );
+    expect(setIsHighCpuAlert).not.toHaveBeenCalled();
+    expect(setIsRecoveryAlert).not.toHaveBeenCalled();
+  });
+  test("it should set a recovered CPU alert when CPU average is under threshold for 2 minutes", () => {
+    const setIsHighCpuAlert = jest.fn();
+    const setIsRecoveryAlert = jest.fn();
+    const newAverageOverTime = [
+      0.32, 0.21, 0.4, 0.23, 0.32, 0.21, 0.4, 0.22, 0.32, 0.21, 0.4, 0.42, 0.32,
+      0.21, 0.4, 0.33,
+    ];
+    handleCPULevelAlert(
+      setIsHighCpuAlert,
+      setIsRecoveryAlert,
+      newAverageOverTime
+    );
+    expect(setIsHighCpuAlert).toHaveBeenCalledWith(false);
+    expect(setIsRecoveryAlert).toHaveBeenCalledWith(true);
+  });
+});

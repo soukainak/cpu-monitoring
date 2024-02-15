@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useEffect, useRef, useState } from "react";
+import React, { FunctionComponent, useEffect, useState } from "react";
 import { Chart, registerables } from "chart.js";
 import "./App.css";
 import { fetchCPULoadData } from "./Utils/app.utils";
