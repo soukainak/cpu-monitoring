@@ -8,10 +8,9 @@ app.use(cors());
 
 app.get('/api/data', (req, res) => {
   try {
-    const cpus = os.cpus();
     const cpusLength = os.cpus().length;
     const loadAverage = os.loadavg()[0] / cpusLength;
-     res.json({ cpus, cpusLength, loadAverage })
+     res.json({ cpusLength, loadAverage })
   }catch(e){
     res.status(500).json({error: 'Aaaaayy'})
   }
