@@ -2,6 +2,8 @@ import React, { FunctionComponent, useEffect, useState } from "react";
 import { Chart, registerables } from "chart.js";
 import "./App.css";
 import { fetchCPULoadData } from "./Utils/app.utils";
+import CustomChart from "./Components/CustomChart";
+import CPUChart from "./CpuChart";
 Chart.register(...registerables);
 
 interface CpuData {
@@ -16,6 +18,8 @@ const App: FunctionComponent = () => {
   });
   const [isHighCpuAlert, setIsHighCpuAlert] = useState<boolean>(false);
   const [isRecoveryAlert, setIsRecoveryAlert] = useState<boolean>(false);
+  const [cpuAverageLoadData, SetCpuAverageLoadData] = useState<number[]>([]);
+
 
   useEffect(() => {
     fetchCPULoadDataOnIntervals();
@@ -32,7 +36,7 @@ const App: FunctionComponent = () => {
   const fetchCPULoadDataOnIntervals = () => {
     setInterval(
       () =>
-        fetchCPULoadData(setIsHighCpuAlert, setIsRecoveryAlert, setAverageLoad),
+        fetchCPULoadData(setIsHighCpuAlert, setIsRecoveryAlert, setAverageLoad, SetCpuAverageLoadData, cpuAverageLoadData),
       5000
     );
   };
@@ -42,6 +46,7 @@ const App: FunctionComponent = () => {
       <h3>the average CPU load change over last 10 minutes</h3>
       <p>Number of CPUs on my computer : {averageLoad.cpusLength}</p>
       <p>Current average cpu load : {averageLoad.loadAverage}</p>
+      <CPUChart data={cpuAverageLoadData}/>
     </div>
   );
 };

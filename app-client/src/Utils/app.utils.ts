@@ -1,9 +1,6 @@
 import { Chart } from "chart.js";
 import { retrieveCPULoadData } from "../Services/app.service";
 
-let newAverageOverTime: number[] = [];
-let cpuLoadAverageChart: any;
-
 const generateTimeIntervals = (): string[] => {
   const intervals = [];
   const secondsInMinute = 60;
@@ -34,9 +31,10 @@ const handleCPULevelAlert = (
   if (newAverageOverTime.length >= 12) {
     let checkHighCpuRange = newAverageOverTime.slice(-12);
 
-    const isHighCPU = checkHighCpuRange.filter((e) => e < 0.45).length === 0;
+    const isHighCPU = !checkHighCpuRange.some((e) => e < 0.45);
+
     const hasCPURecovered =
-      checkHighCpuRange.filter((e) => e >= 0.45).length === 0;
+      !checkHighCpuRange.some((e) => e >= 0.45);
 
     if (isHighCPU) {
       setIsHighCpuAlert(true);
@@ -50,82 +48,65 @@ const handleCPULevelAlert = (
 
 type alertSetter = (alertStatus: boolean) => void;
 
-const handleCPULoadChart = async (
-  newAverageOverTime: number[],
-  cpuLoadAverageChart: any,
-  createNewChart: (newChart: any) => void
-) => {
-  if (newAverageOverTime.length > 60) {
-    newAverageOverTime.shift();
-  }
-  const options = {
-    scales: {
-      y: {
-        beginAtZero: true,
-      },
-    },
-  };
-  const cpuLoadChartCanvas: any = document.getElementById("myChart");
+const createChart = (elementId: string, options: any): Chart<any, any, any> | null => {
+  const cpuLoadChartCanvas = document.getElementById(elementId) as HTMLCanvasElement | null;
+
   const cpuLoadChartContext =
     cpuLoadChartCanvas && cpuLoadChartCanvas.getContext("2d");
 
-  if (cpuLoadAverageChart) {
-    cpuLoadAverageChart.data.datasets[0].data = newAverageOverTime;
-    cpuLoadAverageChart.update();
-  } else {
-    cpuLoadAverageChart = createNewChart(
-      new Chart(cpuLoadChartContext, {
-        type: "bar",
-        data: {
-          datasets: [
-            {
-              label: "CPU Average load",
-              data: [...newAverageOverTime],
-              order: 2,
-            },
-            {
-              label: "CPU Average limit",
-              data: Array(60).fill(0.45, 0, 60),
-              type: "line",
-              order: 1,
-            },
-          ],
-          labels: [...generateTimeIntervals()],
+  return (cpuLoadChartContext && new Chart(cpuLoadChartContext, {
+    type: "bar",
+    data: {
+      datasets: [
+        {
+          label: "CPU Average load",
+          data: [],
+          order: 2,
         },
-        options: options,
-      })
-    );
-  }
-};
-
-const createNewChart = (newChart: any) => {
-  cpuLoadAverageChart = newChart;
-};
+        {
+          label: "CPU Average limit",
+          data: Array(60).fill(0.45, 0, 60),
+          type: "line",
+          order: 1,
+        },
+      ],
+      labels: [...generateTimeIntervals()],
+    },
+    options: options,
+  }))
+}
 
 const fetchCPULoadData = async (
   setIsHighCpuAlert: alertSetter,
   setIsRecoveryAlert: alertSetter,
-  setAverageLoad: (cpuData: { cpusLength: number; loadAverage: number }) => void
-): Promise<void> => {
+  setAverageLoad: (cpuData: { cpusLength: number; loadAverage: number }) => void,
+  setCpuAverageLoadData: (cpuData: number[]) => void,
+  cpuAverageLoadData: number[] 
+  ): Promise<void> => {
   try {
     const response = await retrieveCPULoadData();
-    newAverageOverTime.push(response?.data.loadAverage);
+    if (cpuAverageLoadData.length >= 60) {
+      cpuAverageLoadData.shift();
+    }
+    console.log("Into fetchLoad");
+    console.log(cpuAverageLoadData);
+    setCpuAverageLoadData([...cpuAverageLoadData, response?.data.loadAverage])
 
     setAverageLoad(response?.data);
+
     handleCPULevelAlert(
       setIsHighCpuAlert,
       setIsRecoveryAlert,
-      newAverageOverTime
+      cpuAverageLoadData
     );
-    handleCPULoadChart(newAverageOverTime, cpuLoadAverageChart, createNewChart);
   } catch (error) {
     console.error("something went wrong while retrieving CPU data", error);
   }
 };
 
 export {
-  handleCPULoadChart,
   handleCPULevelAlert,
   fetchCPULoadData,
   generateTimeIntervals,
+  createChart
 };
