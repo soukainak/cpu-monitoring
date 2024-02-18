@@ -2,7 +2,6 @@ import React, { FunctionComponent, useEffect, useState } from "react";
 import { Chart, registerables } from "chart.js";
 import "./App.css";
 import { fetchCPULoadData } from "./Utils/app.utils";
-import CustomChart from "./Components/CustomChart";
 import CPUChart from "./CpuChart";
 Chart.register(...registerables);
 
@@ -16,37 +15,41 @@ const App: FunctionComponent = () => {
     cpusLength: 0,
     loadAverage: 0,
   });
-  const [isHighCpuAlert, setIsHighCpuAlert] = useState<boolean>(false);
-  const [isRecoveryAlert, setIsRecoveryAlert] = useState<boolean>(false);
-  const [cpuAverageLoadData, SetCpuAverageLoadData] = useState<number[]>([]);
+  const [cpuAverageLoadData, setCpuAverageLoadData] = useState<number[]>(
+    localStorage
+      .getItem("cpuLoadData")
+      ?.split(",")
+      .map((x) => parseFloat(x)) || []
+  );
 
+  const updateData = (data: any) => {
+    const newData = cpuAverageLoadData;
+    newData.push(data);
+    setCpuAverageLoadData([...newData]);
+    localStorage.setItem("cpuLoadData", newData.toString());
+  };
 
   useEffect(() => {
     fetchCPULoadDataOnIntervals();
   }, []);
 
-  useEffect(() => {
-    if (isHighCpuAlert) alert("HIGH CPU ALERT");
-  }, [isHighCpuAlert]);
-
-  useEffect(() => {
-    if (isRecoveryAlert) alert("CPU has recovered");
-  }, [isRecoveryAlert]);
-
   const fetchCPULoadDataOnIntervals = () => {
     setInterval(
       () =>
-        fetchCPULoadData(setIsHighCpuAlert, setIsRecoveryAlert, setAverageLoad, SetCpuAverageLoadData, cpuAverageLoadData),
+        fetchCPULoadData(setAverageLoad, cpuAverageLoadData || [], updateData),
       5000
     );
   };
 
   return (
-    <div className="App">
+    <div
+      className="App"
+      style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+    >
       <h3>the average CPU load change over last 10 minutes</h3>
       <p>Number of CPUs on my computer : {averageLoad.cpusLength}</p>
       <p>Current average cpu load : {averageLoad.loadAverage}</p>
-      <CPUChart data={cpuAverageLoadData}/>
+      <CPUChart data={cpuAverageLoadData} />
     </div>
   );
 };
