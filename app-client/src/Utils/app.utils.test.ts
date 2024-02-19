@@ -2,179 +2,203 @@ import {
   fetchCPULoadData,
   generateTimeIntervals,
   handleCPULevelAlert,
-  // handleCPULoadChart,
 } from "./app.utils";
-// jest.mock("chart.js", () => ({
-//   Chart: jest.fn(),
-// }));
-// jest.mock("axios", () => ({
-//   create: jest.fn(),
-// }));
-// // describe("testing handleCPULoadChart function", () => {
-// //   const mockDocument: any = {
-// //     getElementById: jest.fn(() => ({
-// //       getContext: jest.fn(() => ({
-// //         update: jest.fn(),
-// //       })),
-// //     })),
-// //   };
-// //   global.document = mockDocument;
 
-// //   test("it should handle create a new chart when it doesn't exist", () => {
-// //     const newAverageOverTime: number[] = [];
-// //     const createNewChart = jest.fn();
-// //     const cpuLoadAverageChart = undefined;
-// //     handleCPULoadChart(newAverageOverTime, cpuLoadAverageChart, createNewChart);
-// //     expect(createNewChart).toHaveBeenCalled();
-// //   });
+jest.mock("chart.js", () => ({
+  Chart: jest.fn(),
+}));
+jest.mock("axios", () => ({
+  create: jest.fn(),
+}));
+const localStorageMock = (() => {
+  let store: any = {};
+  return {
+    getItem: (key: string) => store[key],
+    setItem: (key: string, value: string) => (store[key] = value.toString()),
+    clear: () => (store = {}),
+    length: 0,
+    removeItem: () => {},
+    key: () => "",
+  };
+})();
+global.localStorage = localStorageMock;
 
-// //   test("it should modify dataset of the chart when it exists", () => {
-// //     const newAverageOverTime = [0.2, 0.3, 0.4];
-// //     const cpuLoadAverageChart = {
-// //       data: {
-// //         datasets: [
-// //           {
-// //             data: [],
-// //           },
-// //         ],
-// //       },
-// //       update: jest.fn(),
-// //     };
-// //     const createNewChart = jest.fn();
+jest.mock("../services/app.service.ts", () => ({
+  retrieveCPULoadData: () =>
+    Promise.resolve({
+      data: { cpusLength: 4, loadAverage: 0.75 },
+    }),
+}));
 
-// //     handleCPULoadChart(newAverageOverTime, cpuLoadAverageChart, createNewChart);
+describe("testing fetchCPULoadData function", () => {
+  test("it should retrieve CPU load data and fall functions to compute it", async () => {
+    const updateData = jest.fn();
+    const setAverageLoad = jest.fn();
+    const cpuAverageLoadData: number[] = [0.43, 0.434];
 
-// //     expect(cpuLoadAverageChart.data.datasets[0].data).toEqual(
-// //       newAverageOverTime
-// //     );
-// //     expect(createNewChart).not.toHaveBeenCalled();
-// //   });
+    await fetchCPULoadData(setAverageLoad, cpuAverageLoadData, updateData);
 
-// //   test("it should remove the first eleemnt of the data after then minutes", () => {
-// //     const newAverageOverTime = new Array(61);
-// //     newAverageOverTime.fill(0.45, 0, 61);
-// //     const cpuLoadAverageChart = {
-// //       data: {
-// //         datasets: [
-// //           {
-// //             data: [],
-// //           },
-// //         ],
-// //       },
-// //       update: jest.fn(),
-// //     };
-// //     const createNewChart = jest.fn();
+    expect(setAverageLoad).toHaveBeenCalledWith({
+      cpusLength: 4,
+      loadAverage: 0.75,
+    });
+    expect(updateData).toHaveBeenCalledWith(0.75);
+  });
+});
 
-// //     handleCPULoadChart(newAverageOverTime, cpuLoadAverageChart, createNewChart);
+describe("generateTimeIntervals function", () => {
+  test("returns array of time intervals for 10 minutes observation window", () => {
+    const observationWindow = 10;
+    const intervals = generateTimeIntervals(observationWindow);
+    expect(intervals).toHaveLength(60); // 60 intervals in 10 minutes
+    expect(intervals[0]).toMatch(/^\d{2}:\d{2}:\d{2}$/); // Format: "hh:mm:ss"
+  });
 
-// //     expect(cpuLoadAverageChart.data.datasets[0].data).toHaveLength(60);
-// //   });
-// // });
-// jest.mock("../services/app.service.ts", () => ({
-//   retrieveCPULoadData: () =>
-//     Promise.resolve({
-//       data: { cpusLength: 4, loadAverage: 0.75 },
-//     }),
-// }));
+  test("returns array of time intervals for 5 minutes observation window", () => {
+    const observationWindow = 5;
+    const intervals = generateTimeIntervals(observationWindow);
+    expect(intervals).toHaveLength(30); // 30 intervals in 5 minutes
+    expect(intervals[0]).toMatch(/^\d{2}:\d{2}:\d{2}$/); // Format: "hh:mm:ss"
+  });
 
-// describe("testing fetchCPULoadData function", () => {
-//   test("it should retrieve CPU load data and fall functions to compute it", async () => {
-//     const setIsHighCpuAlert = jest.fn();
-//     const setIsRecoveryAlert = jest.fn();
-//     const setAverageLoad = jest.fn();
-//     const newAverageOverTime: number[] = [];
+  test("returns array of time intervals for 1 minute observation window", () => {
+    const observationWindow = 1;
+    const intervals = generateTimeIntervals(observationWindow);
+    expect(intervals).toHaveLength(6); // 6 intervals in 1 minute
+    expect(intervals[0]).toMatch(/^\d{2}:\d{2}:\d{2}$/); // Format: "hh:mm:ss"
+  });
 
-//     await fetchCPULoadData(
-//       setIsHighCpuAlert,
-//       setIsRecoveryAlert,
-//       setAverageLoad
-//     );
+  test("returns array of time intervals with correct time values", () => {
+    // Mock current time
+    const mockTime = new Date("2024-02-11T12:00:00"); // 12:00:00
+    const spy = jest
+      .spyOn(global.Date, "now")
+      .mockImplementation(() => mockTime.getTime());
 
-//     expect(setAverageLoad).toHaveBeenCalledWith({
-//       cpusLength: 4,
-//       loadAverage: 0.75,
-//     });
-//   });
-// });
+    // Call the function with observation window of 10 minutes
+    const observationWindow = 10;
+    const intervals = generateTimeIntervals(observationWindow);
 
-// describe("testing generateTimeIntervals function", () => {
-//   test("generates array of time intervals with correct format", () => {
-//     const intervals: string[] = generateTimeIntervals();
+    // Calculate expected time intervals
+    const expectedIntervals = [
+      "11:50:10",
+      "11:50:20",
+      "11:50:30",
+      "11:50:40",
+      "11:50:50",
+      "11:51:00",
+      "11:51:10",
+      "11:51:20",
+      "11:51:30",
+      "11:51:40",
+      "11:51:50",
+      "11:52:00",
+      "11:52:10",
+      "11:52:20",
+      "11:52:30",
+      "11:52:40",
+      "11:52:50",
+      "11:53:00",
+      "11:53:10",
+      "11:53:20",
+      "11:53:30",
+      "11:53:40",
+      "11:53:50",
+      "11:54:00",
+      "11:54:10",
+      "11:54:20",
+      "11:54:30",
+      "11:54:40",
+      "11:54:50",
+      "11:55:00",
+      "11:55:10",
+      "11:55:20",
+      "11:55:30",
+      "11:55:40",
+      "11:55:50",
+      "11:56:00",
+      "11:56:10",
+      "11:56:20",
+      "11:56:30",
+      "11:56:40",
+      "11:56:50",
+      "11:57:00",
+      "11:57:10",
+      "11:57:20",
+      "11:57:30",
+      "11:57:40",
+      "11:57:50",
+      "11:58:00",
+      "11:58:10",
+      "11:58:20",
+      "11:58:30",
+      "11:58:40",
+      "11:58:50",
+      "11:59:00",
+      "11:59:10",
+      "11:59:20",
+      "11:59:30",
+      "11:59:40",
+      "11:59:50",
+      "12:00:00",
+    ];
 
-//     const totalMinutes = 10;
-//     const intervalInSeconds = 10;
-//     const expectedTotalIntervals = (totalMinutes * 60) / intervalInSeconds;
+    // Verify that the function returns the expected time intervals
+    expect(intervals).toEqual(expectedIntervals);
 
-//     expect(intervals).toHaveLength(expectedTotalIntervals);
+    // Restore original implementation of Date.now()
+    spy.mockRestore();
+  });
+});
 
-//     intervals.forEach((interval) => {
-//       expect(interval).toMatch(/^\d{2}:\d{2}$/);
-//     });
-//   });
-// });
+describe("handleCPULevelAlert function", () => {
+  beforeEach(() => {
+    // Clear localStorage before each test
+    localStorage.clear();
+  });
 
-// describe("testing handleCPULevelAlert function", () => {
-//   test("it should do nothing before 2 minutes", () => {
-//     const setIsHighCpuAlert = jest.fn();
-//     const setIsRecoveryAlert = jest.fn();
-//     const newAverageOverTime = [2.43, 3.12, 5.45, 6.0, 3.32];
-//     handleCPULevelAlert(
-//       setIsHighCpuAlert,
-//       setIsRecoveryAlert,
-//       newAverageOverTime
-//     );
-//     expect(setIsHighCpuAlert).not.toHaveBeenCalled();
-//     expect(setIsRecoveryAlert).not.toHaveBeenCalled();
-//   });
-//   test("it should set an high CPU alert when CPU average is above threshold for 2 minutes", () => {
-//     const setIsHighCpuAlert = jest.fn();
-//     const setIsRecoveryAlert = jest.fn();
-//     const newAverageOverTime = [
-//       2.43, 3.12, 5.45, 6.0, 3.32, 2.43, 3.12, 5.45, 6.0, 3.32, 2.43, 3.12,
-//       5.45, 6.0, 3.32,
-//     ];
-//     handleCPULevelAlert(
-//       setIsHighCpuAlert,
-//       setIsRecoveryAlert,
-//       newAverageOverTime
-//     );
-//     expect(setIsHighCpuAlert).toHaveBeenCalledWith(true);
-//     expect(setIsRecoveryAlert).toHaveBeenCalledWith(false);
-//   });
-//   test("it should not set any alert if CPU average is normal", () => {
-//     const setIsHighCpuAlert = jest.fn();
-//     const setIsRecoveryAlert = jest.fn();
-//     const newAverageOverTime = [
-//       0.32, 0.21, 0.4, 0.56, 0.32, 0.21, 0.4, 0.56, 0.32, 0.21, 0.4, 0.56, 0.32,
-//       0.21, 0.4, 0.56,
-//     ];
-//     handleCPULevelAlert(
-//       setIsHighCpuAlert,
-//       setIsRecoveryAlert,
-//       newAverageOverTime
-//     );
-//     expect(setIsHighCpuAlert).not.toHaveBeenCalled();
-//     expect(setIsRecoveryAlert).not.toHaveBeenCalled();
-//   });
-//   test("it should set a recovered CPU alert when CPU average is under threshold for 2 minutes", () => {
-//     const setIsHighCpuAlert = jest.fn();
-//     const setIsRecoveryAlert = jest.fn();
-//     const newAverageOverTime = [
-//       0.32, 0.21, 0.4, 0.23, 0.32, 0.21, 0.4, 0.22, 0.32, 0.21, 0.4, 0.42, 0.32,
-//       0.21, 0.4, 0.33,
-//     ];
-//     handleCPULevelAlert(
-//       setIsHighCpuAlert,
-//       setIsRecoveryAlert,
-//       newAverageOverTime
-//     );
-//     expect(setIsHighCpuAlert).toHaveBeenCalledWith(false);
-//     expect(setIsRecoveryAlert).toHaveBeenCalledWith(true);
-//   });
-// });
+  test("sets CPU high alert when CPU load is consistently high", () => {
+    // Call the function with 12 data points all above or equal to 0.45
+    const newAverageOverTime = [
+      1.5, 1.6, 1.7, 1.8, 1.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6,
+    ];
+    handleCPULevelAlert(newAverageOverTime);
 
-describe("", () => {
-  it("", () => {
-    expect(true).toBe(true);
-  })
-})
+    // Verify that localStorage is updated correctly
+    expect(localStorage.getItem("cpuHighOccurences")).toBe("1");
+    expect(localStorage.getItem("cpuHighMoment")).not.toBe(null);
+  });
+
+  test("sets CPU recovery alert when CPU load recovers from high level", () => {
+    // Call the function with 12 data points initially high and then low
+    const newAverageOverTime = [
+      1.5, 1.6, 1.7, 1.8, 1.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6,
+    ];
+    handleCPULevelAlert(newAverageOverTime);
+
+    // Verify that localStorage is updated correctly
+    expect(localStorage.getItem("cpuRecoveredOccurences")).toBe("");
+    expect(localStorage.getItem("cpuRecoveredMoment")).toBe("");
+
+    const newAverageOverTimeToRecover = [
+      0.3, 0.2, 0.322, 0.12, 0.44, 0.42, 0.32, 0.123, 0.425, 0.334, 0.442, 0.21,
+    ];
+    handleCPULevelAlert(newAverageOverTimeToRecover);
+    expect(localStorage.getItem("cpuRecoveredOccurences")).toBe("1");
+    expect(localStorage.getItem("cpuRecoveredMoment")).not.toBe("");
+    expect(localStorage.getItem("cpuHighOccurences")).toBe("");
+    expect(localStorage.getItem("cpuHighMoment")).toBe("");
+  });
+
+  test("does not set any alert when not enough data points", () => {
+    // Call the function with less than 12 data points
+    const newAverageOverTime = [
+      0.4, 0.42, 0.43, 0.44, 0.42, 0.41, 0.43, 0.44, 0.42, 0.43,
+    ];
+    handleCPULevelAlert(newAverageOverTime);
+
+    // Verify that localStorage remains unchanged
+    expect(localStorage.getItem("cpuHighOccurences")).toBe(null);
+    expect(localStorage.getItem("cpuRecoveredOccurences")).toBe(null);
+  });
+});

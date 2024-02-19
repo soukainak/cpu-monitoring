@@ -53,7 +53,7 @@ const CPUChart = ({ data }: { data: number[] }) => {
     <div style={{ width: "800px" }}>
       {isHighCPUAlertDisplayed && (
         <Alert color="error">
-          CPU went higher than threshold at{" "}
+          My computer is under heavy CPU load from{" "}
           {new Date(parseInt(localCPUHighMoment || "")).toLocaleString() +
             ". It Occured " +
             storedCPUHighOccurences +
@@ -62,7 +62,7 @@ const CPUChart = ({ data }: { data: number[] }) => {
       )}
       {isRecoveredCPUAlertDisplayed && (
         <Alert color="success">
-          CPU has recovered at{" "}
+          My computer recovered from heavy CPU load from{" "}
           {new Date(parseInt(localCPURecoveredMoment || "")).toLocaleString() +
             ". It Occured " +
             storedCpuRecoveredOccurences +

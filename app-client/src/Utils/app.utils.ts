@@ -25,8 +25,8 @@ const handleCPULevelAlert = (newAverageOverTime: number[]) => {
   if (newAverageOverTime.length >= 12) {
     let checkHighCpuRange = newAverageOverTime.slice(-12);
 
-    const isHighCPU = !checkHighCpuRange.some((e) => e < 0.45);
-    const hasCPURecovered = !checkHighCpuRange.some((e) => e >= 0.45);
+    const isHighCPU = !checkHighCpuRange.some((e) => e < 1);
+    const hasCPURecovered = !checkHighCpuRange.some((e) => e >= 1);
 
     const storedCPUHighMoment = localStorage.getItem("cpuHighMoment");
     const storedCPUHighOccurences = localStorage.getItem("cpuHighOccurences");
@@ -46,16 +46,18 @@ const handleCPULevelAlert = (newAverageOverTime: number[]) => {
         localStorage.setItem("cpuRecoveredOccurences", "");
         localStorage.setItem("cpuHighMoment", Date.now().toString());
       }
-    } else if (hasCPURecovered && storedCPUHighMoment) {
+    } else if (hasCPURecovered) {
       localStorage.setItem(
         "cpuRecoveredOccurences",
         storedCpuRecoveredOccurences
           ? (parseInt(storedCpuRecoveredOccurences) + 1).toString()
           : "1"
       );
-      localStorage.setItem("cpuHighMoment", "");
-      localStorage.setItem("cpuHighOccurences", "");
-      localStorage.setItem("cpuRecoveredMoment", Date.now().toString());
+      if (storedCPUHighMoment) {
+        localStorage.setItem("cpuHighMoment", "");
+        localStorage.setItem("cpuHighOccurences", "");
+        localStorage.setItem("cpuRecoveredMoment", Date.now().toString());
+      }
     }
   }
 };
@@ -85,7 +87,7 @@ const createChart = (
           },
           {
             label: "CPU Average limit",
-            data: Array(60).fill(0.45, 0, 60),
+            data: Array(60).fill(1, 0, 60),
             type: "line",
             order: 1,
           },

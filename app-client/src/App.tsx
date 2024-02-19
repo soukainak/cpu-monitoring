@@ -1,8 +1,9 @@
 import React, { FunctionComponent, useEffect, useState } from "react";
 import { Chart, registerables } from "chart.js";
-import "./App.css";
 import { fetchCPULoadData } from "./Utils/app.utils";
 import CPUChart from "./CpuChart";
+import "./App.css";
+
 Chart.register(...registerables);
 
 interface CpuData {
@@ -37,7 +38,7 @@ const App: FunctionComponent = () => {
     setInterval(
       () =>
         fetchCPULoadData(setAverageLoad, cpuAverageLoadData || [], updateData),
-      5000
+      10000
     );
   };
 
@@ -47,8 +48,8 @@ const App: FunctionComponent = () => {
       style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
     >
       <h3>the average CPU load change over last 10 minutes</h3>
-      <p>Number of CPUs on my computer : {averageLoad.cpusLength}</p>
-      <p>Current average cpu load : {averageLoad.loadAverage}</p>
+      <p>Number of CPU cores on my computer : {averageLoad.cpusLength}</p>
+      <p>Current average CPU load : {averageLoad.loadAverage}</p>
       <CPUChart data={cpuAverageLoadData} />
     </div>
   );
