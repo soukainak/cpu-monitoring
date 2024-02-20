@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import CustomChart from "./Components/CustomChart";
-import { Chart } from "chart.js";
-import { Alert } from "@mui/material";
+import { Chart, ChartType, DefaultDataPoint } from "chart.js";
+import { Alert, AlertColor } from "@mui/material";
+import { generateTimeIntervals } from "./Utils/app.utils";
+import "./CpuChart.css";
 
 const CPUChart = ({ data }: { data: number[] }) => {
   const options = {
@@ -18,7 +20,11 @@ const CPUChart = ({ data }: { data: number[] }) => {
     "cpuRecoveredOccurences"
   );
   const storedCPUHighOccurences = localStorage.getItem("cpuHighOccurences");
-  const [canvasChart, setCanvasChart] = useState<Chart<any, any, any> | null>();
+  const [canvasChart, setCanvasChart] = useState<Chart<
+    ChartType,
+    DefaultDataPoint<ChartType>,
+    unknown
+  > | null>();
   const [isHighCPUAlertDisplayed, setIsHighCPUAlertDisplayed] =
     useState<boolean>(false);
   const [isRecoveredCPUAlertDisplayed, setIsRecoveredCPUAlertDisplayed] =
@@ -46,36 +52,53 @@ const CPUChart = ({ data }: { data: number[] }) => {
   useEffect(() => {
     if (canvasChart) {
       canvasChart.data.datasets[0].data = data;
+      const labels = generateTimeIntervals(10);
+      canvasChart.data.labels = labels;
       canvasChart.update();
     }
-  }, [data]);
+  }, [data, canvasChart]);
+
+  const displayAlert = (
+    displayAlert: boolean,
+    color: AlertColor,
+    descriptionText: string,
+    occurences: string | null,
+    moment: string | null
+  ) => {
+    return (
+      displayAlert && (
+        <Alert color={color}>
+          {descriptionText}
+          {new Date(parseInt(moment || "")).toLocaleString() +
+            ". It occured " +
+            occurences +
+            " times"}
+        </Alert>
+      )
+    );
+  };
 
   return (
-    <div style={{ width: "800px" }}>
-      {isHighCPUAlertDisplayed && (
-        <Alert color="error">
-          My computer is under heavy CPU load from{" "}
-          {new Date(parseInt(localCPUHighMoment || "")).toLocaleString() +
-            ". It Occured " +
-            storedCPUHighOccurences +
-            " times"}
-        </Alert>
+    <div className="wrapper">
+      {displayAlert(
+        isHighCPUAlertDisplayed,
+        "error",
+        "My computer is under heavy CPU load from ",
+        storedCPUHighOccurences,
+        localCPUHighMoment
       )}
-      {isRecoveredCPUAlertDisplayed && (
-        <Alert color="success">
-          My computer recovered from heavy CPU load from{" "}
-          {new Date(parseInt(localCPURecoveredMoment || "")).toLocaleString() +
-            ". It Occured " +
-            storedCpuRecoveredOccurences +
-            " times"}
-        </Alert>
+      {displayAlert(
+        isRecoveredCPUAlertDisplayed,
+        "success",
+        "My computer recovered from heavy CPU load from ",
+        storedCpuRecoveredOccurences,
+        localCPURecoveredMoment
       )}
       <CustomChart
         id="myChart"
         options={options}
         setCanvasChart={setCanvasChart}
-        observationWindow={10}
-      ></CustomChart>
+      />
     </div>
   );
 };

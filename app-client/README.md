@@ -1,6 +1,6 @@
 # CPU load average web application
 
-This project is a proof-of-concept (POC) for a browser-based CPU load monitoring application. The application allows users to view CPU load information in real-time, analyze historical data, and receive alerts for high CPU load or recovery.
+This project is a proof-of-concept (POC) for a browser-based CPU load monitoring application. The application allows users to view CPU load information in real-time, analyze historical data and receive alerts for high CPU load or recovery.
 
 ## Available features
 
@@ -19,33 +19,21 @@ This project is a proof-of-concept (POC) for a browser-based CPU load monitoring
 
 ## Setup instructions
 
-To setup the project you can start by installing the dependencies. To do so, you can run this command at the root of the project and in app-client folder `cd app-client`:
+To setup the project you can start by installing the dependencies. To do so you can run at the project root:
 
-### `npm install`
+### `npm run setup`
 
-then, to run the project you can run concurrently the client and server by running at the root of the project:
+then, to start the project you can run concurrently the client and server by running at the root of the project:
 
 ### `npm start`
 
 Open [http://localhost:3000] to view it in the browser.
 
-The utils file methods and the component are tested. Run this command to excecute these tests:
+The utils file methods and the component are tested. Run this command on `app-client` to excecute these tests:
 
 ### `npm test`
 
----------------------------------------------- FUTUR IMPROVMENTS -----------------------------------------------
-
-### Continuous Integration/Continuous Deployment (CI/CD) with Docker:
-
-Integrating CI/CD pipelines ensures automated testing and deployment of the application, enhancing development efficiency and reliability. Docker can be used for containerization, providing a consistent environment across different stages of the pipeline. Here's how we can integrate CI/CD with Docker:
-
-- CI Pipeline: Set up a CI pipeline using tools like Jenkins, GitLab CI, or GitHub Actions. The pipeline should include steps for building Docker images, running tests, and pushing images to a registry.
-
-- Dockerization: Dockerize the application by creating a Dockerfile that defines the application's environment and dependencies. Use multi-stage builds for optimizing Docker image size.
-
-- Testing: Integrate Cypress for end-to-end testing to ensure the application functions correctly across different environments. Cypress tests can be executed as part of the CI pipeline to catch regressions early.
-
-- Deployment: Define deployment stages in the CI/CD pipeline to deploy the application to various environments automatically after successful testing.
+## Future improvments
 
 ### WebSocket Integration:
 
@@ -60,3 +48,15 @@ WebSocket integration enhances real-time communication between the client and se
 - Improved User Experience: Enhance the user experience with interactive features like tooltips for chart data points, draggable thresholds, and customizable dashboard layouts.
 
 By incorporating CI/CD with Docker, Cypress for testing, WebSocket integration for real-time updates, and additional features for enhanced monitoring, the application will be well-equipped for production use, ensuring scalability, reliability, and a seamless user experience.
+
+### Continuous Integration/Continuous Deployment (CI/CD) with Docker:
+
+Integrating CI/CD pipelines ensures automated testing and deployment of the application, enhancing development efficiency and reliability. Docker can be used for containerization, providing a consistent environment across different stages of the pipeline. Here's how we can integrate CI/CD with Docker:
+
+- CI Pipeline: Set up a CI pipeline using tools like Jenkins, GitLab CI, or GitHub Actions. The pipeline should include steps for building Docker images, running tests, and pushing images to a registry.
+
+- Dockerization: Dockerize the application by creating a Dockerfile that defines the application's environment and dependencies. Use multi-stage builds for optimizing Docker image size.
+
+- Testing: Integrate Cypress for end-to-end testing to ensure the application functions correctly across different environments. Cypress tests can be executed as part of the CI pipeline to catch regressions early.
+
+- Deployment: Define deployment stages in the CI/CD pipeline to deploy the application to various environments automatically after successful testing.

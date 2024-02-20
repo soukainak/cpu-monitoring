@@ -1,15 +1,19 @@
-import { Chart } from "chart.js";
+import { Chart, ChartOptions, ChartType, DefaultDataPoint } from "chart.js";
 import { retrieveCPULoadData } from "../Services/app.service";
 
-const generateTimeIntervals = (observationWindow: number): string[] => {
+const threshold = 1;
+const intervalInSeconds = 10;
+
+const generateTimeIntervals = (
+  observationWindowInMinutes: number
+): string[] => {
   const intervals: string[] = [];
-  const intervalInSeconds = 10;
-  const totalIntervals = (60 * observationWindow) / intervalInSeconds; // 10 minutes in seconds divided by intervalInSeconds
+  const totalIntervals = (60 * observationWindowInMinutes) / intervalInSeconds;
 
   // Get the current time in milliseconds
   const currentTime = Date.now();
 
-  // Generate the array of time intervals
+  // Generate an array of time intervals in ten last minutes
   for (let i = totalIntervals - 1; i >= 0; i--) {
     const time = new Date(currentTime - i * intervalInSeconds * 1000);
     const minutes = String(time.getMinutes()).padStart(2, "0");
@@ -24,9 +28,8 @@ const generateTimeIntervals = (observationWindow: number): string[] => {
 const handleCPULevelAlert = (newAverageOverTime: number[]) => {
   if (newAverageOverTime.length >= 12) {
     let checkHighCpuRange = newAverageOverTime.slice(-12);
-
-    const isHighCPU = !checkHighCpuRange.some((e) => e < 1);
-    const hasCPURecovered = !checkHighCpuRange.some((e) => e >= 1);
+    const isHighCPU = !checkHighCpuRange.some((e) => e < threshold);
+    const hasCPURecovered = !checkHighCpuRange.some((e) => e >= threshold);
 
     const storedCPUHighMoment = localStorage.getItem("cpuHighMoment");
     const storedCPUHighOccurences = localStorage.getItem("cpuHighOccurences");
@@ -34,39 +37,32 @@ const handleCPULevelAlert = (newAverageOverTime: number[]) => {
       "cpuRecoveredOccurences"
     );
 
-    if (isHighCPU) {
+    if (isHighCPU && (!storedCPUHighMoment || storedCPUHighMoment === "")) {
+      localStorage.setItem("cpuRecoveredMoment", "");
+      localStorage.setItem("cpuHighMoment", Date.now().toString());
       localStorage.setItem(
         "cpuHighOccurences",
         storedCPUHighOccurences
           ? (parseInt(storedCPUHighOccurences) + 1).toString()
           : "1"
       );
-      if (!storedCPUHighMoment || storedCPUHighMoment === "") {
-        localStorage.setItem("cpuRecoveredMoment", "");
-        localStorage.setItem("cpuRecoveredOccurences", "");
-        localStorage.setItem("cpuHighMoment", Date.now().toString());
-      }
-    } else if (hasCPURecovered) {
+    } else if (hasCPURecovered && storedCPUHighMoment) {
+      localStorage.setItem("cpuHighMoment", "");
       localStorage.setItem(
         "cpuRecoveredOccurences",
         storedCpuRecoveredOccurences
           ? (parseInt(storedCpuRecoveredOccurences) + 1).toString()
           : "1"
       );
-      if (storedCPUHighMoment) {
-        localStorage.setItem("cpuHighMoment", "");
-        localStorage.setItem("cpuHighOccurences", "");
-        localStorage.setItem("cpuRecoveredMoment", Date.now().toString());
-      }
+      localStorage.setItem("cpuRecoveredMoment", Date.now().toString());
     }
   }
 };
 
 const createChart = (
   elementId: string,
-  options: any,
-  observationWindow: number
-): Chart<any, any, any> | null => {
+  options: ChartOptions
+): Chart<ChartType, DefaultDataPoint<ChartType>, unknown> | null => {
   const cpuLoadChartCanvas = document.getElementById(
     elementId
   ) as HTMLCanvasElement | null;
@@ -87,29 +83,30 @@ const createChart = (
           },
           {
             label: "CPU Average limit",
-            data: Array(60).fill(1, 0, 60),
+            data: Array(60).fill(threshold, 0, 60),
             type: "line",
             order: 1,
           },
         ],
-        labels: [...generateTimeIntervals(observationWindow)],
+        labels: [],
       },
       options: options,
     })
   );
 };
 
-const fetchCPULoadData = async (
+const handleCPULoadData = async (
   setAverageLoad: (cpuData: {
     cpusLength: number;
     loadAverage: number;
   }) => void,
   cpuAverageLoadData: number[],
-  updateData: (data: any) => void
+  updateData: (data: number) => void
 ): Promise<void> => {
   try {
+    const nbIntervalsInTenMinutes = 60;
     const response = await retrieveCPULoadData();
-    if (cpuAverageLoadData.length >= 60) {
+    if (cpuAverageLoadData.length >= nbIntervalsInTenMinutes) {
       cpuAverageLoadData.shift();
     }
     updateData(response?.data.loadAverage);
@@ -122,7 +119,7 @@ const fetchCPULoadData = async (
 
 export {
   handleCPULevelAlert,
-  fetchCPULoadData,
+  handleCPULoadData,
   generateTimeIntervals,
   createChart,
 };

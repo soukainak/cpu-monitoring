@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useEffect, useState } from "react";
 import { Chart, registerables } from "chart.js";
-import { fetchCPULoadData } from "./Utils/app.utils";
+import { handleCPULoadData } from "./Utils/app.utils";
 import CPUChart from "./CpuChart";
 import "./App.css";
 
@@ -23,31 +23,28 @@ const App: FunctionComponent = () => {
       .map((x) => parseFloat(x)) || []
   );
 
-  const updateData = (data: any) => {
+  const updateData = (data: number) => {
     const newData = cpuAverageLoadData;
     newData.push(data);
     setCpuAverageLoadData([...newData]);
     localStorage.setItem("cpuLoadData", newData.toString());
   };
 
-  useEffect(() => {
-    fetchCPULoadDataOnIntervals();
-  }, []);
-
-  const fetchCPULoadDataOnIntervals = () => {
+  const handleCPULoadDataOnIntervals = () => {
     setInterval(
       () =>
-        fetchCPULoadData(setAverageLoad, cpuAverageLoadData || [], updateData),
+        handleCPULoadData(setAverageLoad, cpuAverageLoadData || [], updateData),
       10000
     );
   };
 
+  useEffect(() => {
+    handleCPULoadDataOnIntervals();
+  }, []);
+
   return (
-    <div
-      className="App"
-      style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
-    >
-      <h3>the average CPU load change over last 10 minutes</h3>
+    <div className="App">
+      <h3>The average CPU load change over last 10 minutes</h3>
       <p>Number of CPU cores on my computer : {averageLoad.cpusLength}</p>
       <p>Current average CPU load : {averageLoad.loadAverage}</p>
       <CPUChart data={cpuAverageLoadData} />

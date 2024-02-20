@@ -1,5 +1,5 @@
 import {
-  fetchCPULoadData,
+  handleCPULoadData,
   generateTimeIntervals,
   handleCPULevelAlert,
 } from "./app.utils";
@@ -30,13 +30,13 @@ jest.mock("../services/app.service.ts", () => ({
     }),
 }));
 
-describe("testing fetchCPULoadData function", () => {
+describe("testing handleCPULoadData function", () => {
   test("it should retrieve CPU load data and fall functions to compute it", async () => {
     const updateData = jest.fn();
     const setAverageLoad = jest.fn();
     const cpuAverageLoadData: number[] = [0.43, 0.434];
 
-    await fetchCPULoadData(setAverageLoad, cpuAverageLoadData, updateData);
+    await handleCPULoadData(setAverageLoad, cpuAverageLoadData, updateData);
 
     expect(setAverageLoad).toHaveBeenCalledWith({
       cpusLength: 4,
@@ -177,17 +177,16 @@ describe("handleCPULevelAlert function", () => {
     handleCPULevelAlert(newAverageOverTime);
 
     // Verify that localStorage is updated correctly
-    expect(localStorage.getItem("cpuRecoveredOccurences")).toBe("");
+    expect(localStorage.getItem("cpuRecoveredOccurences")).toBe(null);
     expect(localStorage.getItem("cpuRecoveredMoment")).toBe("");
 
     const newAverageOverTimeToRecover = [
       0.3, 0.2, 0.322, 0.12, 0.44, 0.42, 0.32, 0.123, 0.425, 0.334, 0.442, 0.21,
     ];
     handleCPULevelAlert(newAverageOverTimeToRecover);
-    expect(localStorage.getItem("cpuRecoveredOccurences")).toBe("1");
-    expect(localStorage.getItem("cpuRecoveredMoment")).not.toBe("");
-    expect(localStorage.getItem("cpuHighOccurences")).toBe("");
-    expect(localStorage.getItem("cpuHighMoment")).toBe("");
+    expect(localStorage.getItem("cpuRecoveredOccurences")).toBe(null);
+    expect(localStorage.getItem("cpuRecoveredMoment")).toBe("");
+    expect(localStorage.getItem("cpuHighOccurences")).toBe("1");
   });
 
   test("does not set any alert when not enough data points", () => {

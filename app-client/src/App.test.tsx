@@ -1,10 +1,14 @@
 import React from "react";
 import { render } from "@testing-library/react";
 import App from "./App";
+
 jest.mock("axios", () => ({
   create: jest.fn(),
   get: jest.fn(),
 }));
+
+HTMLCanvasElement.prototype.getContext = jest.fn();
+
 describe("App component", () => {
   beforeEach(() => {
     localStorage.clear();
@@ -15,7 +19,7 @@ describe("App component", () => {
 
     expect(container).toBeDefined();
     expect(
-      getByText("the average CPU load change over last 10 minutes")
+      getByText("The average CPU load change over last 10 minutes")
     ).toBeInTheDocument();
     expect(
       getByText("Number of CPU cores on my computer : 0")
