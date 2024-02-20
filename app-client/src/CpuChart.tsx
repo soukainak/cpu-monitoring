@@ -26,6 +26,7 @@ const CPUChart = ({ data }: { data: number[] }) => {
 
   const localCPUHighMoment = localStorage.getItem("cpuHighMoment");
   const localCPURecoveredMoment = localStorage.getItem("cpuRecoveredMoment");
+
   useEffect(() => {
     if (localCPUHighMoment && localCPUHighMoment !== "") {
       setIsHighCPUAlertDisplayed(true);

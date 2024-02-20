@@ -1,46 +1,62 @@
-# Getting Started with Create React App
+# CPU load average web application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project is a proof-of-concept (POC) for a browser-based CPU load monitoring application. The application allows users to view CPU load information in real-time, analyze historical data, and receive alerts for high CPU load or recovery.
 
-## Available Scripts
+## Available features
 
-In the project directory, you can run:
+- Real-time CPU Load Monitoring: Display current average CPU load.
+- Historical Data Visualization: Track CPU load changes over a 10-minute window.
+- Alerting System: Alert users to high CPU load or recovery events.
+- Backend Service Integration: Communicate with a local backend service to retrieve CPU load information.
+- Periodic Data Retrieval: Retrieve CPU load information every 10 seconds.
+- Threshold-based Alerts: Alert users when CPU load exceeds or recovers from predefined thresholds.
+
+## Used technologies
+
+- Frontend: React.js, TypeScript, CSS
+- Backend: Node.js, Express.js
+- Testing: Jest, React testing library
+
+## Setup instructions
+
+To setup the project you can start by installing the dependencies. To do so, you can run this command at the root of the project and in app-client folder `cd app-client`:
+
+### `npm install`
+
+then, to run the project you can run concurrently the client and server by running at the root of the project:
 
 ### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+Open [http://localhost:3000] to view it in the browser.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+The utils file methods and the component are tested. Run this command to excecute these tests:
 
 ### `npm test`
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---------------------------------------------- FUTUR IMPROVMENTS -----------------------------------------------
 
-### `npm run build`
+### Continuous Integration/Continuous Deployment (CI/CD) with Docker:
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Integrating CI/CD pipelines ensures automated testing and deployment of the application, enhancing development efficiency and reliability. Docker can be used for containerization, providing a consistent environment across different stages of the pipeline. Here's how we can integrate CI/CD with Docker:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- CI Pipeline: Set up a CI pipeline using tools like Jenkins, GitLab CI, or GitHub Actions. The pipeline should include steps for building Docker images, running tests, and pushing images to a registry.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- Dockerization: Dockerize the application by creating a Dockerfile that defines the application's environment and dependencies. Use multi-stage builds for optimizing Docker image size.
 
-### `npm run eject`
+- Testing: Integrate Cypress for end-to-end testing to ensure the application functions correctly across different environments. Cypress tests can be executed as part of the CI pipeline to catch regressions early.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- Deployment: Define deployment stages in the CI/CD pipeline to deploy the application to various environments automatically after successful testing.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### WebSocket Integration:
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+WebSocket integration enhances real-time communication between the client and server, enabling instant updates without continuous polling. To do it we can modify the client-side code to establish a WebSocket connection with the server upon application initialization. Subscribe to CPU load updates and dynamically update the UI using WebSocket events.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### Additional Features for Enhanced Monitoring:
 
-## Learn More
+- Expanded Monitoring Metrics: Extend monitoring capabilities by measuring additional computer metrics, such as memory usage, disk I/O, network traffic, etc. Integrate corresponding charts to visualize these metrics alongside CPU load.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+- Dynamic Threshold Visualization: Implement dynamic threshold visualization by highlighting CPU load bars in red when they exceed predefined thresholds. Provide users with the ability to set and adjust these thresholds via input controls.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- Improved User Experience: Enhance the user experience with interactive features like tooltips for chart data points, draggable thresholds, and customizable dashboard layouts.
+
+By incorporating CI/CD with Docker, Cypress for testing, WebSocket integration for real-time updates, and additional features for enhanced monitoring, the application will be well-equipped for production use, ensuring scalability, reliability, and a seamless user experience.
