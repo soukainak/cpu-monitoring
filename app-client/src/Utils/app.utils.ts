@@ -4,6 +4,7 @@ import { retrieveCPULoadData } from "../Services/app.service";
 const threshold = 1;
 const intervalInSeconds = 10;
 
+// Generate an array of time intervals in n last minutes
 const generateTimeIntervals = (
   observationWindowInMinutes: number
 ): string[] => {
@@ -13,7 +14,6 @@ const generateTimeIntervals = (
   // Get the current time in milliseconds
   const currentTime = Date.now();
 
-  // Generate an array of time intervals in ten last minutes
   for (let i = totalIntervals - 1; i >= 0; i--) {
     const time = new Date(currentTime - i * intervalInSeconds * 1000);
     const minutes = String(time.getMinutes()).padStart(2, "0");
@@ -25,6 +25,7 @@ const generateTimeIntervals = (
   return intervals;
 };
 
+//Update localStorage to handle alerting moments and occurences for heavy and recorver status
 const handleCPULevelAlert = (newAverageOverTime: number[]) => {
   if (newAverageOverTime.length >= 12) {
     let checkHighCpuRange = newAverageOverTime.slice(-12);
@@ -59,6 +60,7 @@ const handleCPULevelAlert = (newAverageOverTime: number[]) => {
   }
 };
 
+// Get canvas with given id and use it as context to create a new chart
 const createChart = (
   elementId: string,
   options: ChartOptions

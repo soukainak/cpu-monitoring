@@ -1,5 +1,5 @@
 import axios from "axios";
-const instance = axios.create({ baseURL: "http://localhost:8080" });
+const instance = axios.create({ baseURL: process.env.REACT_APP_BASE_URL });
 
 const retrieveCPULoadData = async () => {
   try {
