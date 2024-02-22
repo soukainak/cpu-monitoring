@@ -35,8 +35,16 @@ describe("testing handleCPULoadData function", () => {
     const updateData = jest.fn();
     const setAverageLoad = jest.fn();
     const cpuAverageLoadData: number[] = [0.43, 0.434];
+    const setData = jest.fn();
+    const getData = jest.fn();
 
-    await handleCPULoadData(setAverageLoad, cpuAverageLoadData, updateData);
+    await handleCPULoadData(
+      setAverageLoad,
+      cpuAverageLoadData,
+      updateData,
+      setData,
+      getData
+    );
 
     expect(setAverageLoad).toHaveBeenCalledWith({
       cpusLength: 4,
@@ -151,53 +159,70 @@ describe("generateTimeIntervals function", () => {
   });
 });
 
-describe("handleCPULevelAlert function", () => {
-  beforeEach(() => {
-    // Clear localStorage before each test
-    localStorage.clear();
+describe("handleCPULevelAlert", () => {
+  const mockSetData = jest.fn();
+  const mockGetData = jest.fn((key) => "");
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
-  test("sets CPU high alert when CPU load is consistently high", () => {
-    // Call the function with 12 data points all above or equal to 0.45
-    const newAverageOverTime = [
-      1.5, 1.6, 1.7, 1.8, 1.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6,
-    ];
-    handleCPULevelAlert(newAverageOverTime);
+  it("should do nothing when newAverageOverTime has length less than 12", () => {
+    const newAverageOverTime = [70, 60, 75, 85, 90, 70, 60, 65, 80, 75, 70];
+    handleCPULevelAlert(newAverageOverTime, mockSetData, mockGetData);
 
-    // Verify that localStorage is updated correctly
-    expect(localStorage.getItem("cpuHighOccurences")).toBe("1");
-    expect(localStorage.getItem("cpuHighMoment")).not.toBe(null);
+    expect(mockSetData).not.toHaveBeenCalled();
   });
 
-  test("sets CPU recovery alert when CPU load recovers from high level", () => {
-    // Call the function with 12 data points initially high and then low
-    const newAverageOverTime = [
-      1.5, 1.6, 1.7, 1.8, 1.9, 1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6,
-    ];
-    handleCPULevelAlert(newAverageOverTime);
+  it("should set CPU high moment when CPU is high and no previous high moment stored", () => {
+    const newAverageOverTime = [85, 90, 95, 85, 80, 85, 90, 85, 88, 90, 85, 88];
+    mockGetData.mockImplementation((key) =>
+      key === "cpuHighMoment" ? "" : "0"
+    );
+    handleCPULevelAlert(newAverageOverTime, mockSetData, mockGetData);
 
-    // Verify that localStorage is updated correctly
-    expect(localStorage.getItem("cpuRecoveredOccurences")).toBe(null);
-    expect(localStorage.getItem("cpuRecoveredMoment")).toBe("");
-
-    const newAverageOverTimeToRecover = [
-      0.3, 0.2, 0.322, 0.12, 0.44, 0.42, 0.32, 0.123, 0.425, 0.334, 0.442, 0.21,
-    ];
-    handleCPULevelAlert(newAverageOverTimeToRecover);
-    expect(localStorage.getItem("cpuRecoveredOccurences")).toBe(null);
-    expect(localStorage.getItem("cpuRecoveredMoment")).toBe("");
-    expect(localStorage.getItem("cpuHighOccurences")).toBe("1");
+    expect(mockSetData).toHaveBeenCalledWith(
+      "cpuHighMoment",
+      expect.any(String)
+    );
   });
 
-  test("does not set any alert when not enough data points", () => {
-    // Call the function with less than 12 data points
-    const newAverageOverTime = [
-      0.4, 0.42, 0.43, 0.44, 0.42, 0.41, 0.43, 0.44, 0.42, 0.43,
-    ];
-    handleCPULevelAlert(newAverageOverTime);
+  it("should set CPU high moment and increase occurrence count when CPU is high", () => {
+    const newAverageOverTime = Array(12).fill(90);
+    mockGetData.mockImplementation((key) =>
+      key === "cpuHighOccurences" ? "3" : ""
+    );
+    handleCPULevelAlert(newAverageOverTime, mockSetData, mockGetData);
 
-    // Verify that localStorage remains unchanged
-    expect(localStorage.getItem("cpuHighOccurences")).toBe(null);
-    expect(localStorage.getItem("cpuRecoveredOccurences")).toBe(null);
+    expect(mockSetData).toHaveBeenCalledWith(
+      "cpuHighMoment",
+      expect.any(String)
+    );
+    expect(mockSetData).toHaveBeenCalledWith("cpuHighOccurences", "4");
+  });
+
+  it("should set CPU recovered moment and increase recovery occurrence count when CPU has recovered", () => {
+    const newAverageOverTime = Array(12).fill(70);
+    mockGetData.mockImplementation((key) => {
+      switch (key) {
+        case "cpuHighMoment":
+          return "1234567890";
+        case "cpuRecoveredOccurences":
+          return "2";
+        default:
+          return "";
+      }
+    });
+    handleCPULevelAlert(newAverageOverTime, mockSetData, mockGetData);
+
+    const averageOverTimeAfterRecover = Array(12).fill(0);
+    handleCPULevelAlert(averageOverTimeAfterRecover, mockSetData, mockGetData);
+
+    expect(mockSetData).toHaveBeenCalledWith("cpuHighMoment", "");
+    expect(mockSetData).toHaveBeenCalledWith(
+      "cpuRecoveredMoment",
+      expect.any(String)
+    );
+    expect(mockSetData).toHaveBeenCalledWith("cpuRecoveredOccurences", "3");
   });
 });

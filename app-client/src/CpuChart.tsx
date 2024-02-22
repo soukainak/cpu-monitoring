@@ -4,6 +4,7 @@ import { Chart, ChartType, DefaultDataPoint } from "chart.js";
 import { Alert, AlertColor } from "@mui/material";
 import { generateTimeIntervals } from "./Utils/app.utils";
 import "./CpuChart.css";
+import useLocalData from "./hooks/useLocalData";
 
 const CPUChart = ({ data }: { data: number[] }) => {
   const options = {
@@ -16,10 +17,9 @@ const CPUChart = ({ data }: { data: number[] }) => {
       },
     },
   };
-  const storedCpuRecoveredOccurences = localStorage.getItem(
-    "cpuRecoveredOccurences"
-  );
-  const storedCPUHighOccurences = localStorage.getItem("cpuHighOccurences");
+
+  const { getData } = useLocalData();
+
   const [canvasChart, setCanvasChart] = useState<Chart<
     ChartType,
     DefaultDataPoint<ChartType>,
@@ -30,24 +30,21 @@ const CPUChart = ({ data }: { data: number[] }) => {
   const [isRecoveredCPUAlertDisplayed, setIsRecoveredCPUAlertDisplayed] =
     useState<boolean>(false);
 
-  const localCPUHighMoment = localStorage.getItem("cpuHighMoment");
-  const localCPURecoveredMoment = localStorage.getItem("cpuRecoveredMoment");
-
   useEffect(() => {
-    if (localCPUHighMoment && localCPUHighMoment !== "") {
+    if (getData("cpuHighMoment") && getData("cpuHighMoment") !== "") {
       setIsHighCPUAlertDisplayed(true);
     } else {
       setIsHighCPUAlertDisplayed(false);
     }
-  }, [localCPUHighMoment]);
+  }, [getData("cpuHighMoment")]);
 
   useEffect(() => {
-    if (localCPURecoveredMoment && localCPURecoveredMoment !== "") {
+    if (getData("cpuRecoveredMoment") && getData("cpuRecoveredMoment") !== "") {
       setIsRecoveredCPUAlertDisplayed(true);
     } else {
       setIsRecoveredCPUAlertDisplayed(false);
     }
-  }, [localCPURecoveredMoment]);
+  }, [getData("cpuRecoveredMoment")]);
 
   useEffect(() => {
     if (canvasChart) {
@@ -84,15 +81,15 @@ const CPUChart = ({ data }: { data: number[] }) => {
         isHighCPUAlertDisplayed,
         "error",
         "My computer is under heavy CPU load from ",
-        storedCPUHighOccurences,
-        localCPUHighMoment
+        getData("cpuHighOccurences"),
+        getData("cpuHighMoment")
       )}
       {displayAlert(
         isRecoveredCPUAlertDisplayed,
         "success",
         "My computer recovered from heavy CPU load from ",
-        storedCpuRecoveredOccurences,
-        localCPURecoveredMoment
+        getData("cpuRecoveredOccurences"),
+        getData("cpuRecoveredMoment")
       )}
       <CustomChart
         id="myChart"

@@ -49,20 +49,24 @@ WebSocket integration enhances real-time communication between the client and se
 
 - Expanded Monitoring Metrics: Extend monitoring capabilities by measuring additional computer metrics, such as memory usage, disk I/O, network traffic, etc. Integrate corresponding charts to visualize these metrics alongside CPU load.
 
-- Dynamic Threshold Visualization: Implement dynamic threshold visualization by highlighting CPU load bars in red when they exceed predefined thresholds. Provide users with the ability to set and adjust these thresholds via input controls.
+- Dynamic Threshold Visualization: Implement dynamic threshold visualization by highlighting CPU load bars in red when they exceed predefined thresholds. Provide users with the ability to set and adjust these thresholds via input controls or provide a window of visualisation instead of default 10 minutes.
 
 - Improved User Experience: Enhance the user experience with interactive features like tooltips for chart data points, draggable thresholds, and customizable dashboard layouts.
 
+- ...
+
 ### Continuous Integration/Continuous Deployment (CI/CD) with Docker:
 
-Integrating CI/CD pipelines ensures automated testing and deployment of the application, enhancing development efficiency and reliability. Docker can be used for containerization, providing a consistent environment across different stages of the pipeline. Here's how we can integrate CI/CD with Docker:
-
-- CI Pipeline: Set up a CI pipeline using tools like Jenkins, GitLab CI, or GitHub Actions. The pipeline should include steps for building Docker images, running tests, and pushing images to a registry.
-
-- Dockerization: Dockerize the application by creating a Dockerfile that defines the application's environment and dependencies.
-
-- Testing: Integrate Cypress for end-to-end testing to ensure the application functions correctly across different environments. Cypress tests can be executed as part of the CI pipeline to catch regressions early.
-
-- Deployment: Define deployment stages in the CI/CD pipeline to deploy the application to various environments automatically after successful testing.
+Integration of CI/CD pipelines to ensure automated testing and deployment of the application, enhance development efficiency and reliability. Docker can be used for containerization, providing a consistent environment across different stages of the pipeline.
 
 By incorporating CI/CD with Docker, Cypress for testing, WebSocket integration for real-time updates, and additional features for enhanced monitoring, the application will be well-equipped for production use, ensuring scalability, reliability, and a seamless user experience.
+
+### Some other planned improvements
+
+- Better handling and logging of catched erros by displaying a costum error to the screen for example
+
+- Enhance data structure to handle bigger amount of data
+
+- Persist historical CPU load data in a database instead of using local storage
+
+- ...

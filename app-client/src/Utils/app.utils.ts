@@ -1,7 +1,7 @@
 import { Chart, ChartOptions, ChartType, DefaultDataPoint } from "chart.js";
 import { retrieveCPULoadData } from "../Services/app.service";
 
-const threshold = 1;
+const threshold = 0.3;
 const intervalInSeconds = 10;
 
 // Generate an array of time intervals in n last minutes
@@ -26,41 +26,44 @@ const generateTimeIntervals = (
 };
 
 //Update localStorage to handle alerting moments and occurences for heavy and recorver status
-const handleCPULevelAlert = (newAverageOverTime: number[]) => {
+const handleCPULevelAlert = (
+  newAverageOverTime: number[],
+  setData: (key: string, value: string) => void,
+  getData: (key: string) => string
+) => {
   if (newAverageOverTime.length >= 12) {
     let checkHighCpuRange = newAverageOverTime.slice(-12);
     const isHighCPU = !checkHighCpuRange.some((e) => e < threshold);
     const hasCPURecovered = !checkHighCpuRange.some((e) => e >= threshold);
+    const storedCPUHighMoment = getData("cpuHighMoment");
+    const storedCPUHighOccurences = getData("cpuHighOccurences");
+    const storedCpuRecoveredOccurences = getData("cpuRecoveredOccurences");
 
-    const storedCPUHighMoment = localStorage.getItem("cpuHighMoment");
-    const storedCPUHighOccurences = localStorage.getItem("cpuHighOccurences");
-    const storedCpuRecoveredOccurences = localStorage.getItem(
-      "cpuRecoveredOccurences"
-    );
-
+    // Setup an high CPU alert when CPU load average is heavy for the first time or after recovery in the if
+    // Setup a recovery alert when CPU load average is under threshold for 2 minutes and the CPU load average was under heavy alert right before
     if (isHighCPU && (!storedCPUHighMoment || storedCPUHighMoment === "")) {
-      localStorage.setItem("cpuRecoveredMoment", "");
-      localStorage.setItem("cpuHighMoment", Date.now().toString());
-      localStorage.setItem(
+      setData("cpuRecoveredMoment", "");
+      setData("cpuHighMoment", Date.now().toString());
+      setData(
         "cpuHighOccurences",
         storedCPUHighOccurences
           ? (parseInt(storedCPUHighOccurences) + 1).toString()
           : "1"
       );
     } else if (hasCPURecovered && storedCPUHighMoment) {
-      localStorage.setItem("cpuHighMoment", "");
-      localStorage.setItem(
+      setData("cpuHighMoment", "");
+      setData(
         "cpuRecoveredOccurences",
         storedCpuRecoveredOccurences
           ? (parseInt(storedCpuRecoveredOccurences) + 1).toString()
           : "1"
       );
-      localStorage.setItem("cpuRecoveredMoment", Date.now().toString());
+      setData("cpuRecoveredMoment", Date.now().toString());
     }
   }
 };
 
-// Get canvas with given id and use it as context to create a new chart
+// Get canvas with given id and use it as context to create a new chart with bars and line data vizualisation
 const createChart = (
   elementId: string,
   options: ChartOptions
@@ -97,13 +100,16 @@ const createChart = (
   );
 };
 
+//Fetch api to retrive data each 10 seconds and call functions to display data and handle alerts
 const handleCPULoadData = async (
   setAverageLoad: (cpuData: {
     cpusLength: number;
     loadAverage: number;
   }) => void,
   cpuAverageLoadData: number[],
-  updateData: (data: number) => void
+  updateData: (data: number) => void,
+  setData: (key: string, value: string) => void,
+  getData: (key: string) => string
 ): Promise<void> => {
   try {
     const nbIntervalsInTenMinutes = 60;
@@ -113,7 +119,7 @@ const handleCPULoadData = async (
     }
     updateData(response?.data.loadAverage);
     setAverageLoad(response?.data);
-    handleCPULevelAlert(cpuAverageLoadData);
+    handleCPULevelAlert(cpuAverageLoadData, setData, getData);
   } catch (error) {
     console.error("something went wrong while retrieving CPU data", error);
   }

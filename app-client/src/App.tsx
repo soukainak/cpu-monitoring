@@ -3,6 +3,7 @@ import { Chart, registerables } from "chart.js";
 import { handleCPULoadData } from "./Utils/app.utils";
 import CPUChart from "./CpuChart";
 import "./App.css";
+import useLocalData from "./hooks/useLocalData";
 
 Chart.register(...registerables);
 
@@ -12,30 +13,35 @@ interface CpuData {
 }
 
 const App: FunctionComponent = () => {
+  const { getData, setData } = useLocalData();
+
   const [averageLoad, setAverageLoad] = useState<CpuData>({
     cpusLength: 0,
     loadAverage: 0,
   });
   const [cpuAverageLoadData, setCpuAverageLoadData] = useState<number[]>(
-    localStorage
-      .getItem("cpuLoadData")
-      ?.split(",")
-      .map((x) => parseFloat(x)) || []
+    getData("cpuLoadData")
+      .split(",")
+      .map((x: string) => parseFloat(x)) || []
   );
 
   const updateData = (data: number) => {
     const newData = cpuAverageLoadData;
     newData.push(data);
     setCpuAverageLoadData([...newData]);
-    localStorage.setItem("cpuLoadData", newData.toString());
+    setData("cpuLoadData", newData.toString());
   };
 
   const handleCPULoadDataOnIntervals = () => {
-    setInterval(
-      () =>
-        handleCPULoadData(setAverageLoad, cpuAverageLoadData || [], updateData),
-      10000
-    );
+    setInterval(() => {
+      handleCPULoadData(
+        setAverageLoad,
+        cpuAverageLoadData || [],
+        updateData,
+        setData,
+        getData
+      );
+    }, 10000);
   };
 
   useEffect(() => {
