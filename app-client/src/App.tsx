@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { FunctionComponent, useEffect, useState } from "react";
 import { Chart, registerables } from "chart.js";
 import { handleCPULoadData } from "./Utils/app.utils";

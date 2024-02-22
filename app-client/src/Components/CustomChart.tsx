@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect } from "react";
 import { createChart } from "../Utils/app.utils";
 import { Chart, ChartOptions, ChartType, DefaultDataPoint } from "chart.js";

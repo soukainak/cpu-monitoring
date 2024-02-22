@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import CustomChart from "./Components/CustomChart";
 import { Chart, ChartType, DefaultDataPoint } from "chart.js";
