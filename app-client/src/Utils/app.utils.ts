@@ -1,7 +1,7 @@
 import { Chart, ChartOptions, ChartType, DefaultDataPoint } from "chart.js";
 import { retrieveCPULoadData } from "../Services/app.service";
 
-const threshold = 0.3;
+const threshold = 1;
 const intervalInSeconds = 10;
 
 // Generate an array of time intervals in n last minutes
